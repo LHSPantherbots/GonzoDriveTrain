@@ -36,12 +36,20 @@ public class RobotContainer {
    */
   public RobotContainer() {
     // Configure the button bindings
-    configureButtonBindings(); 
+    configureButtonBindings();
 
     // Make drivetrain respond to DriverGamepad inputs by default
-    Runnable driveFromGamepad = () -> driveTrain.teleopDrive();
-    RunCommand driveCommand = new RunCommand(driveFromGamepad, driveTrain);
-    driveTrain.setDefaultCommand(driveCommand);
+    this.setupDrivetrain();
+  }
+
+  /**
+   * This method set's up our DriveTrain to by default respond to inputs from the
+   * {@code DriverGamepad} by calling {@link DriveTrain#teleopDrive(Joystick)}
+   */
+  private void setupDrivetrain() {
+    Runnable driveFromGamepad = () -> this.driveTrain.teleopDrive(DriverGamepad);
+    RunCommand driveCommand = new RunCommand(driveFromGamepad, this.driveTrain);
+    this.driveTrain.setDefaultCommand(driveCommand);
   }
 
   /**
