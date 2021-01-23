@@ -4,12 +4,41 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.CANEncoder;
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveTrain extends SubsystemBase {
+
+  // Set up the motor controllers
+  CANSparkMax leftLeader = new CANSparkMax(7, MotorType.kBrushless);
+  CANSparkMax leftFollower = new CANSparkMax(8, MotorType.kBrushless);
+  CANSparkMax rightLeader = new CANSparkMax(5, MotorType.kBrushless);
+  CANSparkMax rightFollower = new CANSparkMax(6, MotorType.kBrushless);
+
+  // Set up the encoders by extracting them from the leader controllers.
+  CANEncoder leftEncoder = leftLeader.getEncoder();
+  CANEncoder rightEncoder = rightLeader.getEncoder();
+
+  // Sets up differental drive, using the leader controllers as the left and right
+  // motor controllers
+  DifferentialDrive drive = new DifferentialDrive(leftLeader, rightLeader);
+
+  // The default open loop ramp rate for the drive train
+  private final double OPEN_LOOP_RAMP_RATE = 0.7;
+
+  // The current limit in amps for the motor controllers to prevent motor damage
+  private final int MAX_ALLOWED_CURRENT_LIMIT = 60;
+
   /** Creates a new DriveTrain. */
   public DriveTrain() {
+
+    // Prepare our motor controllers and encoders for operation
+    this.setupDifferentialDriveSystem();
   }
 
   @Override
@@ -51,5 +80,46 @@ public class DriveTrain extends SubsystemBase {
     // because we haven't defined our DifferentialDrive yet, we'll do that
     // in the next step :-)
     // drive.arcadeDrive(move, turn);
+  }
+
+  /**
+   * Reset the position of both encoders to 0
+   */
+  public void resetEncoders() {
+    leftEncoder.setPosition(0);
+    rightEncoder.setPosition(0);
+  }
+
+  /**
+   * Set's up the motor controllers and encoders for the drive train by setting
+   * everything to the default states as well as making sure max allow-able
+   * current limits are set for the motor controllers.
+   * 
+   * This method is private because only the constructor calls it.
+   */
+  private void setupDifferentialDriveSystem() {
+    // Resets motor controllers to default conditions
+    leftLeader.restoreFactoryDefaults();
+    leftFollower.restoreFactoryDefaults();
+    rightLeader.restoreFactoryDefaults();
+    rightFollower.restoreFactoryDefaults();
+
+    leftLeader.setOpenLoopRampRate(OPEN_LOOP_RAMP_RATE);
+    rightLeader.setOpenLoopRampRate(OPEN_LOOP_RAMP_RATE);
+
+    leftLeader.setSmartCurrentLimit(MAX_ALLOWED_CURRENT_LIMIT);
+    leftFollower.setSmartCurrentLimit(MAX_ALLOWED_CURRENT_LIMIT);
+    rightLeader.setSmartCurrentLimit(MAX_ALLOWED_CURRENT_LIMIT);
+    rightFollower.setSmartCurrentLimit(MAX_ALLOWED_CURRENT_LIMIT);
+
+    // Sets up follower motors
+    leftFollower.follow(leftLeader);
+    rightFollower.follow(rightLeader);
+
+    // Sets up endcoders
+    leftEncoder = leftLeader.getEncoder();
+    rightEncoder = rightLeader.getEncoder();
+
+    resetEncoders();
   }
 }
